@@ -10,20 +10,20 @@ phases:
       - echo "Logging in to Amazon ECR..."
       - aws --version
       - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - echo "Account ID: $ACCOUNT_ID"
+      - echo "Region: $AWS_REGION"
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
   build:
     commands:
       - echo "Build started on $(date)"
-      - echo "Current directory:"
       - pwd
+      - echo "Repository contents:"
+      - ls -la
       - echo "Finding Dockerfile..."
       - find . -name Dockerfile
-
-      - docker build \
-          -t $IMAGE_REPO_NAME:$IMAGE_TAG \
-          -f $APP_DIR/Deployment/Dockerfile \
-          $APP_DIR
+      - echo "Building Docker image..."
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Deployment/Dockerfile $APP_DIR
 
   post_build:
     commands:
@@ -34,3 +34,7 @@ phases:
       - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
 
       - echo "Build completed on $(date)"
+
+artifacts:
+  files:
+    - '**/*'
