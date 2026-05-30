@@ -23,7 +23,8 @@ phases:
       - pwd
       - ls -la
       - find . -name Dockerfile
-      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Deployment/Dockerfile $APP_DIR
+      # - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Deployment/Dockerfile $APP_DIR
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Deployment/Dockerfile $APP_DIR/Deployment
 
   post_build:
     commands:
