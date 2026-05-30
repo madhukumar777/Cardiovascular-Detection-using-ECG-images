@@ -7,24 +7,30 @@ env:
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
+      - echo "Logging in to Amazon ECR..."
       - aws --version
       - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
   build:
     commands:
-      - echo Build started on `date`
-      
-      # Build Docker image from subfolder
-      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Dockerfile $APP_DIR
+      - echo "Build started on $(date)"
+      - echo "Current directory:"
+      - pwd
+      - echo "Finding Dockerfile..."
+      - find . -name Dockerfile
+
+      - docker build \
+          -t $IMAGE_REPO_NAME:$IMAGE_TAG \
+          -f $APP_DIR/Deployment/Dockerfile \
+          $APP_DIR
 
   post_build:
     commands:
-      - echo Tagging image...
+      - echo "Tagging image..."
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
 
-      - echo Pushing image...
+      - echo "Pushing image..."
       - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
 
-      - echo Build completed on `date`
+      - echo "Build completed on $(date)"
