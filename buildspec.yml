@@ -1,3 +1,46 @@
+# version: 0.2
+
+# env:
+#   variables:
+#     APP_DIR: "Cardiovascular-Detection-using-ECG-images"
+
+# phases:
+#   pre_build:
+#     commands:
+#       - echo "Logging in to Amazon ECR..."
+#       - aws --version
+#       - export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+#       - echo "Account ID is $ACCOUNT_ID"
+#       - echo "Region is $AWS_REGION"
+#       - echo "Repo name is $IMAGE_REPO_NAME"
+#       - echo "Image tag is $IMAGE_TAG"
+#       - echo "App dir is $APP_DIR"
+#       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+#   build:
+#     commands:
+#       - echo "Build started"
+#       - pwd
+#       - ls -la
+#       - find . -name Dockerfile
+#       # - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Deployment/Dockerfile $APP_DIR
+#       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Deployment/Dockerfile $APP_DIR/Deployment
+
+#   post_build:
+#     commands:
+#       - echo "Tagging image"
+#       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+#       - echo "Pushing image"
+#       - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+#       - echo "Build completed"
+
+# artifacts:
+#   files:
+#     - '**/*'
+
+
+
+
 version: 0.2
 
 env:
@@ -7,32 +50,46 @@ env:
 phases:
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
+      - echo "========== ECR LOGIN =========="
       - aws --version
+
       - export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-      - echo "Account ID is $ACCOUNT_ID"
-      - echo "Region is $AWS_REGION"
-      - echo "Repo name is $IMAGE_REPO_NAME"
-      - echo "Image tag is $IMAGE_TAG"
-      - echo "App dir is $APP_DIR"
+      - export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
+
+      - echo "Account ID     : $ACCOUNT_ID"
+      - echo "Region         : $AWS_REGION"
+      - echo "Repository     : $IMAGE_REPO_NAME"
+      - echo "Build Number   : $CODEBUILD_BUILD_NUMBER"
+      - echo "Image Tag      : $IMAGE_TAG"
+      - echo "App Directory  : $APP_DIR"
+
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
   build:
     commands:
-      - echo "Build started"
+      - echo "========== BUILD STARTED =========="
       - pwd
       - ls -la
       - find . -name Dockerfile
-      # - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Deployment/Dockerfile $APP_DIR
+
       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Deployment/Dockerfile $APP_DIR/Deployment
 
   post_build:
     commands:
-      - echo "Tagging image"
+      - echo "========== TAGGING VERSION IMAGE =========="
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
-      - echo "Pushing image"
+
+      - echo "========== TAGGING LATEST IMAGE =========="
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+
+      - echo "========== PUSHING VERSION IMAGE =========="
       - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
-      - echo "Build completed"
+
+      - echo "========== PUSHING LATEST IMAGE =========="
+      - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+
+      - echo "========== BUILD SUCCESS =========="
+      - echo "Image URI: $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"
 
 artifacts:
   files:
