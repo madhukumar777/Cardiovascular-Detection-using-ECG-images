@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM public.ecr.aws/docker/library/python:3.7
 
 ENV PYTHONUNBUFFERED=1
 ENV APP_HOME=/app
