@@ -100,8 +100,8 @@
 version: 0.2
 env:
   variables:
-    APP_DIR: "Deployment"
-    CONTAINER_NAME: "your-container-name"   # must match ECS task definition
+    APP_DIR: "Cardiovascular-Detection-using-ECG-images"
+    CONTAINER_NAME: "ecg-container"   # must match ECS task definition
 phases:
   pre_build:
     commands:
@@ -115,8 +115,8 @@ phases:
     commands:
       - echo "========== BUILD STARTED =========="
       - pwd
-      - ls -la $APP_DIR
-      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Dockerfile $APP_DIR
+      - ls -la $APP_DIR/Deployment
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Deployment/Dockerfile $APP_DIR/Deployment
   post_build:
     commands:
       - echo "========== TAGGING & PUSHING =========="
