@@ -96,34 +96,59 @@
 #     - '**/*'
 
 
+
 version: 0.2
+
 env:
   variables:
     APP_DIR: "Cardiovascular-Detection-using-ECG-images"
-    CONTAINER_NAME: "your-container-name"   # <-- must match task definition
+
 phases:
   pre_build:
     commands:
       - echo "========== ECR LOGIN =========="
       - aws --version
+
       - export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
-      - export REPO_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME
+
+      - 'echo "Account ID     : $ACCOUNT_ID"'
+      - 'echo "Region         : $AWS_REGION"'
+      - 'echo "Repository     : $IMAGE_REPO_NAME"'
+      - 'echo "Build Number   : $CODEBUILD_BUILD_NUMBER"'
+      - 'echo "Image Tag      : $IMAGE_TAG"'
+      - 'echo "App Directory  : $APP_DIR"'
+
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
   build:
     commands:
       - echo "========== BUILD STARTED =========="
+      - pwd
+      - ls -la
+      - find . -name Dockerfile
+
       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f $APP_DIR/Deployment/Dockerfile $APP_DIR/Deployment
+
   post_build:
     commands:
-      - echo "========== TAGGING & PUSHING =========="
-      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPO_URI:$IMAGE_TAG
-      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPO_URI:latest
-      - docker push $REPO_URI:$IMAGE_TAG
-      - docker push $REPO_URI:latest
-      - echo "========== WRITING imagedefinitions.json =========="
-      - printf '[{"name":"%s","imageUri":"%s"}]' "$CONTAINER_NAME" "$REPO_URI:$IMAGE_TAG" > imagedefinitions.json
-      - cat imagedefinitions.json
+      - echo "========== TAGGING VERSION IMAGE =========="
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+
+      - echo "========== TAGGING LATEST IMAGE =========="
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+
+      - echo "========== PUSHING VERSION IMAGE =========="
+      - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+
+      - echo "========== PUSHING LATEST IMAGE =========="
+      - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+
+      - echo "========== BUILD SUCCESS =========="
+      - 'echo "Image URI: $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"'
+
 artifacts:
   files:
     - imagedefinitions.json
+
+
